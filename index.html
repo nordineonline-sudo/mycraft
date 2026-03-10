@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyCraft</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ═══ MAIN MENU ═══ -->
+    <div id="main-menu">
+        <canvas id="menu-bg-canvas"></canvas>
+        <div id="menu-content">
+            <div id="menu-title">
+                <div class="title-pickaxe">⛏️</div>
+                <h1>MyCraft</h1>
+                <p class="subtitle">Un monde de blocs vous attend</p>
+            </div>
+            <div id="menu-buttons">
+                <button id="btn-play" class="menu-btn primary">
+                    <span class="btn-icon">▶</span> Jouer
+                </button>
+                <button id="btn-controls" class="menu-btn">
+                    <span class="btn-icon">🎮</span> Contrôles
+                </button>
+            </div>
+            <div id="menu-controls-panel" style="display: none;">
+                <h3>⌨️ Contrôles</h3>
+                <div class="control-grid">
+                    <div class="control-item"><kbd>W A S D</kbd><span>Se déplacer</span></div>
+                    <div class="control-item"><kbd>ESPACE</kbd><span>Sauter</span></div>
+                    <div class="control-item"><kbd>SHIFT</kbd><span>Sprinter</span></div>
+                    <div class="control-item"><kbd>CLIC G.</kbd><span>Casser un bloc</span></div>
+                    <div class="control-item"><kbd>CLIC D.</kbd><span>Placer un bloc</span></div>
+                    <div class="control-item"><kbd>1 — 9</kbd><span>Sélectionner bloc</span></div>
+                    <div class="control-item"><kbd>F3</kbd><span>Info debug</span></div>
+                    <div class="control-item"><kbd>ESC</kbd><span>Pause</span></div>
+                </div>
+                <button id="btn-back" class="menu-btn small">← Retour</button>
+            </div>
+            <div id="menu-footer">
+                <p>MyCraft v1.0 — Inspiré par Minecraft</p>
+            </div>
+        </div>
+        <div id="menu-particles"></div>
+    </div>
+
+    <!-- ═══ LOADING SCREEN ═══ -->
+    <div id="loading-screen" style="display: none;">
+        <h1>⛏️ MyCraft</h1>
+        <p id="loading-text">Génération du monde...</p>
+        <div id="loading-bar-container">
+            <div id="loading-bar"></div>
+        </div>
+        <div id="loading-tips">
+            <p class="tip">💡 Astuce : Utilisez Shift pour sprinter !</p>
+        </div>
+    </div>
+
+    <!-- ═══ GAME UI ═══ -->
+    <div id="game-ui" style="display: none;">
+        <div id="crosshair">
+            <span class="cross-h"></span>
+            <span class="cross-v"></span>
+        </div>
+        <div id="hotbar"></div>
+        <div id="debug-info"></div>
+        <div id="pickaxe-hand"></div>
+        <div id="vignette"></div>
+    </div>
+
+    <!-- ═══ PAUSE MENU ═══ -->
+    <div id="pause-menu" style="display: none;">
+        <h2>⏸️ Pause</h2>
+        <p>Cliquez pour reprendre</p>
+        <div class="controls-info">
+            <b>Contrôles :</b><br>
+            WASD — Se déplacer &nbsp;|&nbsp; Espace — Sauter &nbsp;|&nbsp; Shift — Sprint<br>
+            Clic gauche — Casser &nbsp;|&nbsp; Clic droit — Placer<br>
+            1-9 — Sélectionner bloc &nbsp;|&nbsp; F3 — Debug
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+        }
+    }
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

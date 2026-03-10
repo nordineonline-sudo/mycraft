@@ -1,0 +1,23 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/alpine
+{
+	"name": "Alpine",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:alpine-3.22",
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Expose le port 1234 via Docker pour accès depuis n'importe quel poste
+	"runArgs": ["-p", "1234:1234"],
+	"forwardPorts": [1234],
+
+	// Lance le serveur web automatiquement à chaque démarrage du conteneur
+	"postStartCommand": "nohup python3 -m http.server 1234 --bind 0.0.0.0 --directory /workspaces/mycraft > /dev/null 2>&1 &",
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

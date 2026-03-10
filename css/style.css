@@ -1,0 +1,494 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    overflow: hidden;
+    background: #000;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    cursor: default;
+}
+
+canvas {
+    display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN MENU
+   ═══════════════════════════════════════════════════════════ */
+
+#main-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+#menu-bg-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+#menu-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: white;
+}
+
+#menu-title {
+    margin-bottom: 40px;
+    animation: titleFloat 3s ease-in-out infinite;
+}
+
+@keyframes titleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+#menu-title .title-pickaxe {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+    animation: pickaxeSwing 2s ease-in-out infinite;
+}
+
+@keyframes pickaxeSwing {
+    0%, 100% { transform: rotate(-10deg); }
+    50% { transform: rotate(10deg); }
+}
+
+#menu-title h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 48px;
+    color: #4ecca3;
+    text-shadow:
+        3px 3px 0 #2a7a5a,
+        6px 6px 0 rgba(0,0,0,0.3),
+        0 0 40px rgba(78, 204, 163, 0.4);
+    letter-spacing: 6px;
+    margin-bottom: 12px;
+}
+
+#menu-title .subtitle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #aaa;
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Menu Buttons */
+#menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.menu-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    padding: 14px 40px;
+    border: 3px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+    background: rgba(60, 60, 60, 0.8);
+    transition: all 0.2s;
+    min-width: 280px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+    image-rendering: pixelated;
+}
+
+.menu-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s;
+}
+
+.menu-btn:hover::before {
+    left: 100%;
+}
+
+.menu-btn:hover {
+    background: rgba(80, 80, 80, 0.9);
+    border-color: rgba(255,255,255,0.5);
+    transform: scale(1.03);
+    box-shadow: 0 0 20px rgba(78, 204, 163, 0.3);
+}
+
+.menu-btn:active {
+    transform: scale(0.98);
+}
+
+.menu-btn.primary {
+    background: linear-gradient(180deg, #4ecca3 0%, #38a878 50%, #2d8a63 100%);
+    border-color: #2d8a63;
+    font-size: 15px;
+    padding: 16px 50px;
+    box-shadow: 0 4px 0 #1d6a43, 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.menu-btn.primary:hover {
+    background: linear-gradient(180deg, #5eddb3 0%, #48b888 50%, #3d9a73 100%);
+    border-color: #5eddb3;
+    box-shadow: 0 4px 0 #2d7a53, 0 6px 30px rgba(78, 204, 163, 0.5);
+}
+
+.menu-btn.primary:active {
+    box-shadow: 0 2px 0 #1d6a43;
+    transform: translateY(2px) scale(0.98);
+}
+
+.menu-btn.small {
+    font-size: 10px;
+    padding: 10px 24px;
+    min-width: auto;
+    margin-top: 16px;
+}
+
+.btn-icon {
+    margin-right: 6px;
+}
+
+/* Controls Panel */
+#menu-controls-panel {
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(78, 204, 163, 0.3);
+    border-radius: 8px;
+    padding: 24px 32px;
+    backdrop-filter: blur(10px);
+}
+
+#menu-controls-panel h3 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: #4ecca3;
+    margin-bottom: 20px;
+}
+
+.control-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.control-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    font-size: 9px;
+}
+
+.control-item kbd {
+    font-family: 'Press Start 2P', monospace;
+    background: rgba(78, 204, 163, 0.2);
+    border: 1px solid rgba(78, 204, 163, 0.5);
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 8px;
+    color: #4ecca3;
+    min-width: 70px;
+    text-align: center;
+}
+
+.control-item span {
+    color: #ccc;
+    font-size: 8px;
+}
+
+/* Menu Footer */
+#menu-footer {
+    margin-top: 30px;
+}
+
+#menu-footer p {
+    font-size: 7px;
+    color: #555;
+    letter-spacing: 1px;
+}
+
+/* Menu Particles */
+#menu-particles {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOADING SCREEN
+   ═══════════════════════════════════════════════════════════ */
+
+#loading-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    color: white;
+}
+
+#loading-screen h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 36px;
+    margin-bottom: 30px;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+    color: #4ecca3;
+    letter-spacing: 4px;
+    animation: titleFloat 3s ease-in-out infinite;
+}
+
+#loading-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #aaa;
+    margin-bottom: 12px;
+}
+
+#loading-bar-container {
+    width: 360px;
+    height: 20px;
+    background: #222;
+    border-radius: 2px;
+    overflow: hidden;
+    border: 3px solid #555;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+#loading-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #4ecca3, #45b7d1);
+    transition: width 0.15s;
+    box-shadow: 0 0 10px rgba(78, 204, 163, 0.5);
+}
+
+#loading-tips {
+    margin-top: 24px;
+}
+
+#loading-tips .tip {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #666;
+    animation: tipFade 4s ease-in-out infinite;
+}
+
+@keyframes tipFade {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GAME UI
+   ═══════════════════════════════════════════════════════════ */
+
+/* Crosshair */
+#crosshair {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 10;
+    user-select: none;
+}
+
+.cross-h, .cross-v {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 2px rgba(0,0,0,0.9);
+}
+
+.cross-h {
+    width: 22px;
+    height: 2px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.cross-v {
+    width: 2px;
+    height: 22px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Vignette */
+#vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.4) 100%);
+}
+
+/* Hotbar */
+#hotbar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2px;
+    z-index: 10;
+    background: rgba(0,0,0,0.55);
+    padding: 4px;
+    border-radius: 4px;
+    border: 3px solid rgba(80, 80, 80, 0.6);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.hotbar-slot {
+    width: 50px;
+    height: 50px;
+    background: rgba(30, 30, 30, 0.7);
+    border: 2px solid rgba(100, 100, 100, 0.4);
+    border-radius: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    transition: all 0.15s;
+}
+
+.hotbar-slot.selected {
+    border-color: #fff;
+    background: rgba(255,255,255,0.15);
+    box-shadow: 0 0 12px rgba(255,255,255,0.4), inset 0 0 8px rgba(255,255,255,0.1);
+}
+
+.hotbar-slot canvas {
+    width: 38px;
+    height: 38px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.hotbar-slot .slot-number {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: rgba(255,255,255,0.4);
+    user-select: none;
+}
+
+/* Debug Info */
+#debug-info {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.9);
+    z-index: 10;
+    display: none;
+    line-height: 1.6;
+    background: rgba(0,0,0,0.4);
+    padding: 8px 12px;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+}
+
+/* Pickaxe Hand */
+#pickaxe-hand {
+    position: fixed;
+    bottom: -20px;
+    right: -10px;
+    width: 200px;
+    height: 200px;
+    z-index: 8;
+    pointer-events: none;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    transform-origin: bottom right;
+    transition: transform 0.08s ease-out;
+}
+
+#pickaxe-hand.swing {
+    animation: pickaxeSwingHand 0.25s ease-out;
+}
+
+@keyframes pickaxeSwingHand {
+    0% { transform: rotate(0deg); }
+    40% { transform: rotate(-40deg) translateX(-10px); }
+    100% { transform: rotate(0deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAUSE MENU
+   ═══════════════════════════════════════════════════════════ */
+
+#pause-menu {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    color: white;
+    backdrop-filter: blur(6px);
+}
+
+#pause-menu h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 24px;
+    margin-bottom: 16px;
+    color: #4ecca3;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+}
+
+#pause-menu p {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #ccc;
+    margin-bottom: 16px;
+}
+
+.controls-info {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #999;
+    text-align: center;
+    line-height: 2.4;
+    margin-top: 16px;
+    background: rgba(0,0,0,0.4);
+    padding: 16px 24px;
+    border-radius: 4px;
+    border: 1px solid rgba(78, 204, 163, 0.2);
+}
