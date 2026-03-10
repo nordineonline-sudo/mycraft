@@ -9,6 +9,8 @@ import { World } from './world.js';
 import { Player } from './player.js';
 import { HOTBAR_BLOCKS, getBlockProps } from './blocks.js';
 import { NPCManager } from './npc.js';
+import { TouchControls } from './touch.js';
+import { SaveManager } from './save.js';
 
 // ── Loading tips ────────────────────────────────────────────
 const TIPS = [
@@ -26,6 +28,8 @@ class Game {
         this.timeOfDay = 0.25;
         this.dayDuration = 600;
         this.started = false;
+        this.gameInProgress = false;
+        this._looping = false;
 
         this._initMenu();
     }
@@ -33,18 +37,47 @@ class Game {
     // ── Main Menu ───────────────────────────────────────────
     _initMenu() {
         this.mainMenu = document.getElementById('main-menu');
-        const btnPlay = document.getElementById('btn-play');
+        this.btnContinue = document.getElementById('btn-continue');
+        this.btnNewGame = document.getElementById('btn-new-game');
+        this.btnSaves = document.getElementById('btn-saves');
+        const btnFullscreen = document.getElementById('btn-fullscreen');
         const btnControls = document.getElementById('btn-controls');
         const btnBack = document.getElementById('btn-back');
         const controlsPanel = document.getElementById('menu-controls-panel');
         const buttonsPanel = document.getElementById('menu-buttons');
         const titleDiv = document.getElementById('menu-title');
 
-        btnPlay.addEventListener('click', () => {
+        // Update button visibility
+        this._updateMenuButtons();
+
+        // Continue → resume current game or show saves to load
+        this.btnContinue.addEventListener('click', () => {
+            if (this.gameInProgress) {
+                this._resumeGame();
+            }
+        });
+
+        // New Game
+        this.btnNewGame.addEventListener('click', () => {
+            if (this.gameInProgress) {
+                if (!confirm('Commencer une nouvelle partie ?\nLa progression non sauvegardée sera perdue.')) return;
+                this._cleanupGame();
+            }
             this.mainMenu.style.display = 'none';
             this._startGame();
         });
 
+        // Saves
+        this.btnSaves.addEventListener('click', () => {
+            this._showSaveModal();
+        });
+
+        // Fullscreen
+        btnFullscreen.addEventListener('click', () => {
+            this._toggleFullscreen();
+        });
+
+        // Controls
         btnControls.addEventListener('click', () => {
             buttonsPanel.style.display = 'none';
             titleDiv.style.display = 'none';
@@ -57,11 +90,200 @@ class Game {
             titleDiv.style.display = 'block';
         });
 
+        // Save modal back button
+        document.getElementById('btn-save-back').addEventListener('click', () => {
+            document.getElementById('save-modal').style.display = 'none';
+            this.mainMenu.style.display = 'flex';
+        });
+
         // Animate menu background
         this._animateMenuBG();
 
         // Spawn floating particles
         this._spawnMenuParticles();
+    }
+
+    _updateMenuButtons() {
+        const hasSaves = SaveManager.hasAnySave();
+        this.btnContinue.style.display = this.gameInProgress ? 'block' : 'none';
+        this.btnSaves.style.display = (this.gameInProgress || hasSaves) ? 'block' : 'none';
+    }
+
+    // ── Return to Main Menu ─────────────────────────────────
+    _returnToMenu() {
+        if (this.player) this.player.isLocked = false;
+        this.gameUI.style.display = 'none';
+        this.mainMenu.style.display = 'flex';
+        this._updateMenuButtons();
+        document.body.style.cursor = 'default';
+        // Restart menu BG animation
+        this._animateMenuBG();
+    }
+
+    // ── Resume Game ─────────────────────────────────────────
+    _resumeGame() {
+        this.mainMenu.style.display = 'none';
+        this.gameUI.style.display = 'block';
+        document.body.style.cursor = 'none';
+
+        if (this.isMobile) {
+            this.player.isLocked = true;
+        } else {
+            // Request pointer lock to resume
+            this.renderer.domElement.requestPointerLock();
+        }
+    }
+
+    // ── Game Cleanup ────────────────────────────────────────
+    _cleanupGame() {
+        if (this.world) {
+            for (const [, chunk] of this.world.chunks) {
+                chunk.dispose(this.scene);
+            }
+            this.world.chunks.clear();
+        }
+        if (this.npcManager) {
+            for (const npc of this.npcManager.npcs) {
+                this.scene.remove(npc.mesh);
+            }
+            this.npcManager.npcs = [];
+        }
+        if (this.stars) { this.scene.remove(this.stars); this.stars = null; }
+        if (this.clouds) { this.scene.remove(this.clouds); this.clouds = null; }
+        if (this.highlight) { this.scene.remove(this.highlight); this.highlight = null; }
+        if (this.touchControls) { this.touchControls.dispose(); this.touchControls = null; }
+        this.player = null;
+        this.world = null;
+        this.npcManager = null;
+        this.gameInProgress = false;
+        this._looping = false;
+        this.timeOfDay = 0.25;
+    }
+
+    // ── Save Modal ──────────────────────────────────────────
+    _showSaveModal() {
+        this.mainMenu.style.display = 'none';
+        const modal = document.getElementById('save-modal');
+        modal.style.display = 'flex';
+        this._renderSaveSlots();
+    }
+
+    _renderSaveSlots() {
+        const container = document.getElementById('save-slots');
+        const slots = SaveManager.getAllSlots();
+        container.innerHTML = '';
+
+        for (let i = 0; i < SaveManager.SLOT_COUNT; i++) {
+            const data = slots[i];
+            const slot = document.createElement('div');
+            slot.className = 'save-slot' + (data ? '' : ' empty');
+
+            const info = document.createElement('div');
+            info.className = 'save-slot-info';
+
+            const num = document.createElement('span');
+            num.className = 'save-slot-number';
+            num.textContent = `Slot ${i + 1}`;
+            info.appendChild(num);
+
+            if (data) {
+                const date = document.createElement('span');
+                date.className = 'save-slot-date';
+                date.textContent = SaveManager.formatDate(data.date);
+                info.appendChild(date);
+
+                const details = document.createElement('span');
+                details.className = 'save-slot-details';
+                details.textContent = `📍 ${data.player.x.toFixed(0)}, ${data.player.y.toFixed(0)}, ${data.player.z.toFixed(0)}`;
+                info.appendChild(details);
+            } else {
+                const empty = document.createElement('span');
+                empty.className = 'save-slot-date';
+                empty.textContent = 'Vide';
+                info.appendChild(empty);
+            }
+
+            slot.appendChild(info);
+
+            const actions = document.createElement('div');
+            actions.className = 'save-slot-actions';
+
+            // Save button (only if game in progress)
+            if (this.gameInProgress) {
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'save-slot-btn btn-slot-save';
+                saveBtn.textContent = '💾';
+                saveBtn.title = 'Sauvegarder';
+                saveBtn.addEventListener('click', () => {
+                    const success = SaveManager.save(i, {
+                        player: this.player,
+                        timeOfDay: this.timeOfDay,
+                        modifiedBlocks: this.world.getModifications(),
+                    });
+                    this._showToast(success ? `✅ Sauvegardé dans Slot ${i + 1}` : '❌ Erreur de sauvegarde');
+                    this._renderSaveSlots();
+                    this._updateMenuButtons();
+                });
+                actions.appendChild(saveBtn);
+            }
+
+            // Load button (only if slot has data)
+            if (data) {
+                const loadBtn = document.createElement('button');
+                loadBtn.className = 'save-slot-btn btn-slot-load';
+                loadBtn.textContent = '📂';
+                loadBtn.title = 'Charger';
+                loadBtn.addEventListener('click', () => {
+                    if (this.gameInProgress) {
+                        if (!confirm('Charger cette sauvegarde ?\nLa progression non sauvegardée sera perdue.')) return;
+                        this._cleanupGame();
+                    }
+                    document.getElementById('save-modal').style.display = 'none';
+                    this._startGame(data);
+                });
+                actions.appendChild(loadBtn);
+
+                // Delete button
+                const delBtn = document.createElement('button');
+                delBtn.className = 'save-slot-btn btn-slot-delete';
+                delBtn.textContent = '🗑️';
+                delBtn.title = 'Supprimer';
+                delBtn.addEventListener('click', () => {
+                    if (confirm(`Supprimer la sauvegarde Slot ${i + 1} ?`)) {
+                        SaveManager.delete(i);
+                        this._showToast(`🗑️ Slot ${i + 1} supprimé`);
+                        this._renderSaveSlots();
+                        this._updateMenuButtons();
+                    }
+                });
+                actions.appendChild(delBtn);
+            }
+
+            slot.appendChild(actions);
+            container.appendChild(slot);
+        }
+    }
+
+    // ── Toast Notification ──────────────────────────────────
+    _showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(this._toastTimeout);
+        this._toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2500);
+    }
+
+    // ── Fullscreen Toggle ───────────────────────────────────
+    _toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {
+                this._showToast('❌ Plein écran non disponible');
+            });
+        } else {
+            document.exitFullscreen();
+        }
     }
 
     _animateMenuBG() {
@@ -162,13 +384,13 @@ class Game {
     }
 
     // ── Start Game ──────────────────────────────────────────
-    async _startGame() {
-        if (this.started) return;
-        this.started = true;
-
-        this._initRenderer();
-        this._initScene();
-        this._initUI();
+    async _startGame(saveData = null) {
+        // Allow restarting
+        if (!this.renderer) {
+            this._initRenderer();
+            this._initScene();
+            this._initUI();
+        }
 
         const loadingScreen = document.getElementById('loading-screen');
         loadingScreen.style.display = 'flex';
@@ -177,7 +399,7 @@ class Game {
         const tipEl = document.querySelector('#loading-tips .tip');
         tipEl.textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
 
-        await this.start();
+        await this.start(saveData);
     }
 
     // ── Renderer Setup ─────────────────────────────────────
@@ -337,13 +559,12 @@ class Game {
         this.loadingBar = document.getElementById('loading-bar');
         this.loadingText = document.getElementById('loading-text');
         this.gameUI = document.getElementById('game-ui');
-        this.pauseMenu = document.getElementById('pause-menu');
         this.debugInfo = document.getElementById('debug-info');
         this.showDebug = false;
     }
 
     // ── Start Game ──────────────────────────────────────────
-    async start() {
+    async start(saveData = null) {
         // Generate texture atlas
         this.loadingText.textContent = 'Génération des textures...';
         await this._delay(50);
@@ -359,8 +580,17 @@ class Game {
 
         this.world = new World(this.scene, this.solidMaterial, this.waterMaterial);
 
+        // If loading a save, set modifications before generating
+        if (saveData && saveData.modifiedBlocks) {
+            this.world.setModifications(saveData.modifiedBlocks);
+        }
+
+        // Determine spawn center
+        const centerX = saveData ? Math.floor(saveData.player.x) : 8;
+        const centerZ = saveData ? Math.floor(saveData.player.z) : 8;
+
         // Generate initial chunks with progress
-        await this.world.generateInitial(8, 8, (progress) => {
+        await this.world.generateInitial(centerX, centerZ, (progress) => {
             this.loadingBar.style.width = `${Math.floor(progress * 100)}%`;
             this.loadingText.textContent = `Génération du terrain... ${Math.floor(progress * 100)}%`;
         });
@@ -369,13 +599,27 @@ class Game {
         this.loadingText.textContent = 'Invocation des PNJ...';
         await this._delay(50);
 
-        const spawnY = this.world.getSpawnHeight(8, 8);
         this.player = new Player(this.camera, this.world);
-        this.player.position.set(8, spawnY, 8);
+
+        if (saveData) {
+            // Restore player state from save
+            this.player.position.set(saveData.player.x, saveData.player.y, saveData.player.z);
+            this.player.yaw = saveData.player.yaw;
+            this.player.pitch = saveData.player.pitch;
+            this.player.selectedSlot = saveData.player.selectedSlot;
+            this.timeOfDay = saveData.timeOfDay;
+        } else {
+            const spawnY = this.world.getSpawnHeight(8, 8);
+            this.player.position.set(8, spawnY, 8);
+        }
+
+        // Create touch controls (mobile)
+        this.touchControls = new TouchControls(this.player);
+        this.isMobile = this.touchControls.isMobile;
 
         // Create NPCs
         this.npcManager = new NPCManager(this.world, this.scene);
-        this.npcManager.spawnInitial(8, 8);
+        this.npcManager.spawnInitial(centerX, centerZ);
 
         // Create block highlight wireframe
         this._createHighlight();
@@ -389,8 +633,10 @@ class Game {
         // Build hotbar UI
         this._buildHotbar();
 
-        // Setup pointer lock
-        this._setupPointerLock();
+        // Setup pointer lock (desktop only)
+        if (!this.isMobile) {
+            this._setupPointerLock();
+        }
 
         // Pickaxe swing on break
         this._setupPickaxeSwing();
@@ -398,24 +644,52 @@ class Game {
         // Hide loading, show game
         this.loadingScreen.style.display = 'none';
         this.gameUI.style.display = 'block';
-        this.pauseMenu.style.display = 'flex';
+        this.gameInProgress = true;
 
-        // F3 debug toggle
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'F3') {
-                e.preventDefault();
-                this.showDebug = !this.showDebug;
-                this.debugInfo.style.display = this.showDebug ? 'block' : 'none';
-            }
-        });
+        // On mobile, go straight to game; on desktop, request pointer lock
+        if (this.isMobile) {
+            this.player.isLocked = true;
+            document.body.style.cursor = 'default';
+        } else {
+            // Auto-request pointer lock on first click
+            const firstClick = () => {
+                this.renderer.domElement.requestPointerLock();
+                this.renderer.domElement.removeEventListener('click', firstClick);
+            };
+            this.renderer.domElement.addEventListener('click', firstClick);
+        }
+
+        // Game menu button (mobile & desktop)
+        const btnGameMenu = document.getElementById('btn-game-menu');
+        if (!this._gameMenuBound) {
+            this._gameMenuBound = true;
+            btnGameMenu.addEventListener('click', () => {
+                this._returnToMenu();
+            });
+        }
+
+        // F3 debug toggle + ESC to menu
+        if (!this._keyHandlerBound) {
+            this._keyHandlerBound = true;
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'F3') {
+                    e.preventDefault();
+                    this.showDebug = !this.showDebug;
+                    if (this.debugInfo) this.debugInfo.style.display = this.showDebug ? 'block' : 'none';
+                }
+            });
+        }
 
         // Start game loop
         this.clock.start();
+        this._looping = true;
         this._loop();
     }
 
     // ── Pickaxe Swing Trigger ───────────────────────────────
     _setupPickaxeSwing() {
+        if (this._pickaxeSwingBound) return;
+        this._pickaxeSwingBound = true;
         document.addEventListener('mousedown', (e) => {
             if (!this.player || !this.player.isLocked) return;
             if (e.button === 0) {
@@ -427,19 +701,27 @@ class Game {
 
     // ── Pointer Lock ────────────────────────────────────────
     _setupPointerLock() {
+        if (this._pointerLockBound) return;
+        this._pointerLockBound = true;
+
         const canvas = this.renderer.domElement;
 
         const requestLock = () => {
-            canvas.requestPointerLock();
+            if (this.gameInProgress && this.mainMenu.style.display === 'none'
+                && document.getElementById('save-modal').style.display === 'none') {
+                canvas.requestPointerLock();
+            }
         };
 
         canvas.addEventListener('click', requestLock);
-        this.pauseMenu.addEventListener('click', requestLock);
 
         document.addEventListener('pointerlockchange', () => {
             const locked = document.pointerLockElement === canvas;
-            this.player.isLocked = locked;
-            this.pauseMenu.style.display = locked ? 'none' : 'flex';
+            if (this.player) this.player.isLocked = locked;
+            if (!locked && this.gameInProgress) {
+                // ESC pressed → return to main menu
+                this._returnToMenu();
+            }
             document.body.style.cursor = locked ? 'none' : 'default';
         });
     }
@@ -662,10 +944,11 @@ class Game {
 
     // ── Main Loop ───────────────────────────────────────────
     _loop() {
+        if (!this._looping) return;
         requestAnimationFrame(() => this._loop());
 
         const dt = this.clock.getDelta();
-        if (!this.player.isLocked) {
+        if (!this.player || !this.player.isLocked) {
             this.renderer.render(this.scene, this.camera);
             // Render pickaxe overlay
             if (this.pickaxeScene) {
@@ -675,6 +958,16 @@ class Game {
                 this.renderer.autoClear = true;
             }
             return;
+        }
+
+        // Update touch controls
+        if (this.touchControls && this.touchControls.enabled) {
+            this.touchControls.update(dt);
+            // Trigger pickaxe swing on touch break
+            if (this.touchControls.breakHeld && !this.pickaxeSwinging) {
+                this.pickaxeSwinging = true;
+                this.pickaxeSwing = 0;
+            }
         }
 
         // Update player

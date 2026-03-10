@@ -22,6 +22,7 @@ export class World {
         this.noiseTree = new SimplexNoise(seed + 300);
         this.renderDistance = RENDER_DISTANCE;
         this._treePositions = new Map(); // cache per chunk
+        this.modifiedBlocks = new Map(); // track player modifications for save/load
     }
 
     // ── Coordinate Helpers ──────────────────────────────────
@@ -49,6 +50,8 @@ export class World {
         const lx = World.localCoord(x);
         const lz = World.localCoord(z);
         chunk.setBlock(lx, y, lz, type);
+        // Track modification for save system
+        this.modifiedBlocks.set(`${x},${y},${z}`, type);
         chunk.buildMesh(this, this.solidMaterial, this.waterMaterial, this.scene);
 
         // Rebuild neighbors if block is on boundary
@@ -231,6 +234,8 @@ export class World {
 
         const chunk = new Chunk(cx, cz);
         this.generateChunkTerrain(chunk);
+        // Apply any saved modifications for this chunk
+        this._applyChunkModifications(chunk);
         this.chunks.set(key, chunk);
         chunk.buildMesh(this, this.solidMaterial, this.waterMaterial, this.scene);
     }
@@ -291,6 +296,36 @@ export class World {
             };
             batch();
         });
+    }
+
+    // ── Save / Load Modifications ───────────────────────────
+    _applyChunkModifications(chunk) {
+        const wx = chunk.cx * CHUNK_SIZE;
+        const wz = chunk.cz * CHUNK_SIZE;
+        for (const [key, type] of this.modifiedBlocks) {
+            const [x, y, z] = key.split(',').map(Number);
+            const lx = x - wx;
+            const lz = z - wz;
+            if (lx >= 0 && lx < CHUNK_SIZE && lz >= 0 && lz < CHUNK_SIZE && y >= 0 && y < CHUNK_HEIGHT) {
+                chunk.setBlock(lx, y, lz, type);
+            }
+        }
+    }
+
+    getModifications() {
+        const mods = [];
+        for (const [key, type] of this.modifiedBlocks) {
+            const [x, y, z] = key.split(',').map(Number);
+            mods.push({ x, y, z, type });
+        }
+        return mods;
+    }
+
+    setModifications(mods) {
+        this.modifiedBlocks.clear();
+        for (const mod of mods) {
+            this.modifiedBlocks.set(`${mod.x},${mod.y},${mod.z}`, mod.type);
+        }
     }
 
     // ── Raycasting (DDA voxel traversal) ────────────────────

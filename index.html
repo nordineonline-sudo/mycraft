@@ -2,7 +2,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>MyCraft</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -20,8 +23,17 @@
                 <p class="subtitle">Un monde de blocs vous attend</p>
             </div>
             <div id="menu-buttons">
-                <button id="btn-play" class="menu-btn primary">
-                    <span class="btn-icon">▶</span> Jouer
+                <button id="btn-continue" class="menu-btn primary" style="display: none;">
+                    <span class="btn-icon">▶</span> Continuer
+                </button>
+                <button id="btn-new-game" class="menu-btn primary">
+                    <span class="btn-icon">🆕</span> Nouvelle Partie
+                </button>
+                <button id="btn-saves" class="menu-btn" style="display: none;">
+                    <span class="btn-icon">💾</span> Sauvegardes
+                </button>
+                <button id="btn-fullscreen" class="menu-btn">
+                    <span class="btn-icon">📺</span> Plein écran
                 </button>
                 <button id="btn-controls" class="menu-btn">
                     <span class="btn-icon">🎮</span> Contrôles
@@ -66,23 +78,24 @@
             <span class="cross-h"></span>
             <span class="cross-v"></span>
         </div>
+        <button id="btn-game-menu" class="game-menu-btn">☰</button>
         <div id="hotbar"></div>
         <div id="debug-info"></div>
         <div id="pickaxe-hand"></div>
         <div id="vignette"></div>
     </div>
 
-    <!-- ═══ PAUSE MENU ═══ -->
-    <div id="pause-menu" style="display: none;">
-        <h2>⏸️ Pause</h2>
-        <p>Cliquez pour reprendre</p>
-        <div class="controls-info">
-            <b>Contrôles :</b><br>
-            WASD — Se déplacer &nbsp;|&nbsp; Espace — Sauter &nbsp;|&nbsp; Shift — Sprint<br>
-            Clic gauche — Casser &nbsp;|&nbsp; Clic droit — Placer<br>
-            1-9 — Sélectionner bloc &nbsp;|&nbsp; F3 — Debug
+    <!-- ═══ SAVE MODAL ═══ -->
+    <div id="save-modal" style="display: none;">
+        <div class="save-modal-content">
+            <h3 id="save-modal-title">💾 Sauvegardes</h3>
+            <div id="save-slots"></div>
+            <button id="btn-save-back" class="menu-btn small">← Retour</button>
         </div>
     </div>
+
+    <!-- ═══ TOAST ═══ -->
+    <div id="toast" class="toast"></div>
 
     <script type="importmap">
     {
