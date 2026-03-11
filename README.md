@@ -228,6 +228,8 @@ Voir le fichier [PLAN.md](PLAN.md) pour le plan technique détaillé de l'applic
 
 > **Note pour les agents IA** : Consultez `PLAN.md` en début de session et mettez-le à jour après chaque modification structurelle.
 
+Consultez également `.github/copilot-instructions.md` pour des directives spécifiques destinées aux agents IA et aux contributeurs automatisés.
+
 ---
 
 ## 📄 Licence

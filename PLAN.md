@@ -51,6 +51,8 @@ mycraft/
 │   └── save.js                 # SaveManager — 5 slots localStorage (~111 lignes)
 ├── .devcontainer/
 │   └── devcontainer.json       # Config conteneur Alpine + port 1234
+├── .github/
+│   └── copilot-instructions.md  # AI agent guidance for repo
 ├── README.md                   # Documentation utilisateur
 └── PLAN.md                     # Ce fichier (plan technique)
 ```
@@ -352,5 +354,7 @@ constructor → _initMenu() → [clic Nouvelle Partie] → _startGame() → _ini
 ---
 
 - **Release** : v1.0.2.0 — Mise à jour `README.md` et `PLAN.md`
+
+- **Release** : v1.0.2.0 — Mise à jour `README.md`, `PLAN.md` et `.github/copilot-instructions.md`
 
 **Dernière mise à jour** : 11 mars 2026
