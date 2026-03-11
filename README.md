@@ -236,4 +236,4 @@ Ce projet est sous licence MIT.
 
 ---
 
-*MyCraft v1.0 — Inspiré par Minecraft* ⛏️
+*MyCraft v1.0.2.0 — Inspiré par Minecraft* ⛏️

@@ -351,4 +351,6 @@ constructor → _initMenu() → [clic Nouvelle Partie] → _startGame() → _ini
 
 ---
 
-**Dernière mise à jour** : 10 mars 2026
+- **Release** : v1.0.2.0 — Mise à jour `README.md` et `PLAN.md`
+
+**Dernière mise à jour** : 11 mars 2026
